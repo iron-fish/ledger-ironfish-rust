@@ -1,0 +1,3 @@
+[submodule "ledger-ironfish-js"]
+	path = ledger-ironfish-js
+	url = https://github.com/Zondax/ledger-ironfish-js
