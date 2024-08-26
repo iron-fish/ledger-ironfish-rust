@@ -1,5 +1,5 @@
 /*****************************************************************************
- *   Ledger App Boilerplate Rust.
+ *   Ledger App Ironfish Rust.
  *   (c) 2023 Ledger SAS.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ use crate::Instruction;
 #[cfg(not(any(target_os = "stax", target_os = "flex")))]
 fn ui_about_menu(comm: &mut Comm) -> Event<Instruction> {
     let pages = [
-        &Page::from((["Rust Boilerplate", "(c) 2023 Ledger"], true)),
+        &Page::from((["Ironfish", "Zondax AG"], true)),
         &Page::from(("Back", &BACK)),
     ];
     loop {
@@ -50,11 +50,11 @@ fn ui_about_menu(comm: &mut Comm) -> Event<Instruction> {
 
 #[cfg(not(any(target_os = "stax", target_os = "flex")))]
 pub fn ui_menu_main(comm: &mut Comm) -> Event<Instruction> {
-    const APP_ICON: Glyph = Glyph::from_include(include_gif!("crab.gif"));
+    const APP_ICON: Glyph = Glyph::from_include(include_gif!("nanox_icon.gif"));
     let pages = [
         // The from trait allows to create different styles of pages
         // without having to use the new() function.
-        &Page::from((["Boilerplate", "is ready"], &APP_ICON)),
+        &Page::from((["Ironfish", "is ready"], &APP_ICON)),
         &Page::from((["Version", env!("CARGO_PKG_VERSION")], true)),
         &Page::from(("About", &CERTIFICATE)),
         &Page::from(("Quit", &DASHBOARD_X)),
@@ -72,7 +72,7 @@ pub fn ui_menu_main(comm: &mut Comm) -> Event<Instruction> {
 #[cfg(any(target_os = "stax", target_os = "flex"))]
 pub fn ui_menu_main(_: &mut Comm) -> Event<Instruction> {
     // Load glyph from 64x64 4bpp gif file with include_gif macro. Creates an NBGL compatible glyph.
-    const FERRIS: NbglGlyph = NbglGlyph::from_include(include_gif!("crab_64x64.gif", NBGL));
+    const FERRIS: NbglGlyph = NbglGlyph::from_include(include_gif!("stax_icon.gif", NBGL));
 
     let settings_strings = [["Display Memo", "Allow display of transaction memo."]];
     let mut settings: Settings = Default::default();
@@ -81,7 +81,7 @@ pub fn ui_menu_main(_: &mut Comm) -> Event<Instruction> {
         .glyph(&FERRIS)
         .settings(settings.get_mut_ref(), &settings_strings)
         .infos(
-            "Boilerplate",
+            "Ironfish",
             env!("CARGO_PKG_VERSION"),
             env!("CARGO_PKG_AUTHORS"),
         )

@@ -1,8 +1,8 @@
 import pytest
 
-from application_client.boilerplate_transaction import Transaction
-from application_client.boilerplate_command_sender import BoilerplateCommandSender, Errors
-from application_client.boilerplate_response_unpacker import unpack_get_public_key_response, unpack_sign_tx_response
+from application_client.ironfish_transaction import Transaction
+from application_client.ironfish_command_sender import IronfishCommandSender, Errors
+from application_client.ironfish_response_unpacker import unpack_get_public_key_response, unpack_sign_tx_response
 from ragger.error import ExceptionRAPDU
 from ragger.navigator import NavIns, NavInsID
 from utils import ROOT_SCREENSHOT_PATH, check_signature_validity
@@ -14,7 +14,7 @@ from utils import ROOT_SCREENSHOT_PATH, check_signature_validity
 # We will ensure that the displayed information is correct by using screenshots comparison.
 def test_sign_tx_short_tx(backend, scenario_navigator, firmware, navigator):
     # Use the app interface instead of raw interface
-    client = BoilerplateCommandSender(backend)
+    client = IronfishCommandSender(backend)
     # The path used for this entire test
     path: str = "m/44'/1'/0'/0/0"
 
@@ -60,7 +60,7 @@ def test_sign_tx_short_tx_no_memo(backend, scenario_navigator, firmware):
         pytest.skip("Skipping this test for Nano devices")
     
     # Use the app interface instead of raw interface
-    client = BoilerplateCommandSender(backend)
+    client = IronfishCommandSender(backend)
     # The path used for this entire test
     path: str = "m/44'/1'/0'/0/0"
 
@@ -97,7 +97,7 @@ def test_sign_tx_short_tx_no_memo(backend, scenario_navigator, firmware):
 # def test_sign_tx_long_tx(firmware, backend, navigator, test_name):
 def test_sign_tx_long_tx(backend, scenario_navigator, firmware, navigator):
     # Use the app interface instead of raw interface
-    client = BoilerplateCommandSender(backend)
+    client = IronfishCommandSender(backend)
     path: str = "m/44'/1'/0'/0/0"
 
     rapdu = client.get_public_key(path=path)
@@ -138,7 +138,7 @@ def test_sign_tx_long_tx(backend, scenario_navigator, firmware, navigator):
 # The test will ask for a transaction signature that will be refused on screen
 def test_sign_tx_refused(backend, scenario_navigator):
     # Use the app interface instead of raw interface
-    client = BoilerplateCommandSender(backend)
+    client = IronfishCommandSender(backend)
     path: str = "m/44'/1'/0'/0/0"
 
     rapdu = client.get_public_key(path=path)

@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "app-boilerplate-rust"
+name = "ledger-ironfish"
 version = "1.5.0"
 dependencies = [
  "hex",
