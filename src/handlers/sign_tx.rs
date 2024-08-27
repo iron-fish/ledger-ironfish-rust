@@ -39,9 +39,9 @@ pub struct Tx<'a> {
 }
 
 pub struct TxContext {
-    raw_tx: Vec<u8>,
-    path: Bip32Path,
-    review_finished: bool,
+    pub raw_tx: Vec<u8>,
+    pub path: Bip32Path,
+    pub review_finished: bool,
 }
 
 // Implement constructor for TxInfo with default values
@@ -60,7 +60,7 @@ impl TxContext {
         self.review_finished
     }
     // Implement reset for TxInfo
-    fn reset(&mut self) {
+    pub fn reset(&mut self) {
         self.raw_tx.clear();
         self.path = Default::default();
         self.review_finished = false;

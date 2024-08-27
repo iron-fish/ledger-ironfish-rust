@@ -61,7 +61,7 @@ describe('DKG', function () {
                 "72b77943a1af7d0b6dcf0f281d7eb57dcc0540930da6f3c330c1dcf71789dfea2113149ef55e69fc6cb6855435821fe83031c253e26b2499f6d6989984230c962db98971be7aae233c302a3a44cfd17d957e9666f58e31c073b76ee2f4b72cb72f92fce80df70956c591d72013cf3a578587a6e403361138cf7e5960fab304f501"
             ], 2);
 
-            console.log(respIdentity)
+            console.log(respIdentity.identity?.toString("hex"))
             //console.log(respIdentity.identity?.toString('hex'))
 
             expect(respIdentity.returnCode).toEqual(0x9000)
