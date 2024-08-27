@@ -125,7 +125,7 @@ impl TryFrom<ApduHeader> for Instruction {
                     more: value.p2 == P2_SIGN_TX_MORE,
                 })
             },
-            (7, 0, 0) => Ok(Instruction::DkgGetIdentity),
+            (10, 0, 0) => Ok(Instruction::DkgGetIdentity),
             (3..=6, _, _) => Err(AppSW::WrongP1P2),
             (_, _, _) => Err(AppSW::InsNotSupported),
         }
@@ -157,7 +157,7 @@ extern "C" fn sample_main() {
     // Create the communication manager, and configure it to accept only APDU from the 0xe0 class.
     // If any APDU with a wrong class value is received, comm will respond automatically with
     // BadCla status word.
-    let mut comm = Comm::new().set_expected_cla(0xe0);
+    let mut comm = Comm::new().set_expected_cla(0x59);
 
     // Initialize reference to Comm instance for NBGL
     // API calls.
