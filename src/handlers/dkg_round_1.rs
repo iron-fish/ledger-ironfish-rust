@@ -98,22 +98,27 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
 fn compute_dkg_round_1(comm: &mut Comm, tx: &mut Tx) -> Result<(), AppSW> {
     let mut rng = LedgerRng{};
 
-    let (mut round1_secret_package, round1_public_package) = dkg::round1::round1(
+    let (mut round1_secret_package_vec, round1_public_package) = dkg::round1::round1(
         &tx.identities[0],
         tx.min_signers as u16,
         &tx.identities,
         &mut rng,
     ).unwrap();
 
+    let mut resp : Vec<u8> = Vec::new();
+    let mut round1_public_package_vec = round1_public_package.serialize();
+    let round1_public_package_len = round1_public_package_vec.len();
+    let round1_secret_package_len = round1_secret_package_vec.len();
 
-    let mut resp = round1_public_package.serialize();
-    resp.append(&mut round1_secret_package);
+    resp.append(&mut [(round1_secret_package_len >> 8) as u8, (round1_secret_package_len & 0xFF) as u8].to_vec());
+    resp.append(&mut round1_secret_package_vec);
+    resp.append(&mut [(round1_public_package_len >> 8) as u8, (round1_public_package_len & 0xFF) as u8].to_vec());
+    resp.append(&mut round1_public_package_vec);
 
     send_apdu_chunks(comm, resp.as_slice())?;
 
     Ok(())
 }
-
 
 fn send_apdu_chunks(comm: &mut Comm, data: &[u8]) -> Result<(), AppSW> {
     for chunk in data.chunks(MAX_APDU_SIZE) {
