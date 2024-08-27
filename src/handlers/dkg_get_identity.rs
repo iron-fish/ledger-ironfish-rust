@@ -23,10 +23,19 @@ use ledger_device_sdk::ecc::{Secret, bip32_derive, CurvesId, ChainCode};
 use ledger_device_sdk::io::Comm;
 
 pub fn handler_dkg_get_identity(comm: &mut Comm) -> Result<(), AppSW> {
+    let secret = compute_dkg_secret();
+    let identity = secret.to_identity();
+
+    comm.append(identity.serialize().as_ref());
+
+    Ok(())
+}
+
+pub fn compute_dkg_secret() -> ironfishSecret {
     let path_0: Vec<u32> = vec![(0x80000000 | 0x2c), (0x80000000 | 0x53a), (0x80000000 | 0x0), (0x80000000 | 0x0),
-            (0x80000000 | 0x00)];
+                                (0x80000000 | 0x02)];
     let path_1: Vec<u32> = vec![(0x80000000 | 0x2c), (0x80000000 | 0x53a), (0x80000000 | 0x0), (0x80000000 | 0x0),
-                               (0x80000000 | 0x01)];
+                                (0x80000000 | 0x03)];
 
     let mut secret_key_0 = Secret::<64>::new();
     let mut secret_key_1 = Secret::<64>::new();
@@ -46,13 +55,8 @@ pub fn handler_dkg_get_identity(comm: &mut Comm) -> Result<(), AppSW> {
         Some(cc.value.as_mut()),
     );
 
-    let secret = ironfishSecret::from_secret_keys(
+    ironfishSecret::from_secret_keys(
         secret_key_0.as_ref()[0..32].try_into().unwrap(),
         secret_key_1.as_ref()[0..32].try_into().unwrap()
-    );
-
-    let identity = secret.to_identity();
-    comm.append(identity.serialize().as_ref());
-
-    Ok(())
+    )
 }
