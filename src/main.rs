@@ -28,6 +28,7 @@ mod handlers {
     pub mod get_public_key;
     pub mod get_version;
     pub mod sign_tx;
+    pub mod dkg_get_identity;
 }
 
 mod settings;
@@ -37,6 +38,7 @@ use handlers::{
     get_public_key::handler_get_public_key,
     get_version::handler_get_version,
     sign_tx::{handler_sign_tx, TxContext},
+    dkg_get_identity::handler_dkg_get_identity,
 };
 use ledger_device_sdk::io::{ApduHeader, Comm, Event, Reply, StatusWords};
 #[cfg(feature = "pending_review_screen")]
@@ -92,6 +94,7 @@ pub enum Instruction {
     GetAppName,
     GetPubkey { display: bool },
     SignTx { chunk: u8, more: bool },
+    DkgGetIdentity,
 }
 
 impl TryFrom<ApduHeader> for Instruction {
@@ -121,7 +124,8 @@ impl TryFrom<ApduHeader> for Instruction {
                     chunk: value.p1,
                     more: value.p2 == P2_SIGN_TX_MORE,
                 })
-            }
+            },
+            (7, 0, 0) => Ok(Instruction::DkgGetIdentity),
             (3..=6, _, _) => Err(AppSW::WrongP1P2),
             (_, _, _) => Err(AppSW::InsNotSupported),
         }
@@ -199,5 +203,6 @@ fn handle_apdu(comm: &mut Comm, ins: &Instruction, ctx: &mut TxContext) -> Resul
         Instruction::GetVersion => handler_get_version(comm),
         Instruction::GetPubkey { display } => handler_get_public_key(comm, *display),
         Instruction::SignTx { chunk, more } => handler_sign_tx(comm, *chunk, *more, ctx),
+        Instruction::DkgGetIdentity => handler_dkg_get_identity(comm),
     }
 }
