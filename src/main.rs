@@ -125,7 +125,7 @@ impl TryFrom<ApduHeader> for Instruction {
                     more: value.p2 == P2_SIGN_TX_MORE,
                 })
             },
-            (10, 0, 0) => Ok(Instruction::DkgGetIdentity),
+            (16, 0, 0) => Ok(Instruction::DkgGetIdentity),
             (3..=6, _, _) => Err(AppSW::WrongP1P2),
             (_, _, _) => Err(AppSW::InsNotSupported),
         }
