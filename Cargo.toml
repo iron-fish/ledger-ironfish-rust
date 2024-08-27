@@ -26,7 +26,7 @@ pending_review_screen = []
 [package.metadata.ledger]
 curve = ["secp256k1"]
 flags = "0"
-path = ["44'/1'"]
+path = ["44'/1338'"]
 name = "Ironfish"
 
 [package.metadata.ledger.nanox]
