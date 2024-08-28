@@ -19,14 +19,16 @@ use crate::{AppSW, Instruction};
 use alloc::vec::Vec;
 use ledger_device_sdk::random::LedgerRng;
 use ironfish_frost::dkg;
-use ironfish_frost::participant::Identity;
+use ironfish_frost::participant::{Identity, Secret};
 use ledger_device_sdk::io::{Comm, Event};
+use crate::handlers::dkg_get_identity::compute_dkg_secret;
 use crate::handlers::sign_tx::TxContext;
 
 const MAX_TRANSACTION_LEN: usize = 510;
 const MAX_APDU_SIZE: usize = 253;
 
 pub struct Tx {
+    identity_index: u8,
     identities: Vec<Identity>,
     min_signers: u8,
 }
@@ -67,13 +69,18 @@ pub fn handler_dkg_round_1(
             //Ok(())
             // Try to deserialize the transaction
             let mut tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
-            compute_dkg_round_1(comm, &mut tx)
+            let dkg_secret = compute_dkg_secret(tx.identity_index);
+            compute_dkg_round_1(comm, &dkg_secret, &mut tx)
         }
     }
 }
 
 fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
     let mut tx_pos:usize = 0;
+
+    let identity_index = raw_tx[tx_pos];
+    tx_pos +=1;
+
     let elements = raw_tx[tx_pos];
     tx_pos +=1;
 
@@ -92,14 +99,14 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
         return Err("invalid payload");
     }
 
-    Ok(Tx{identities, min_signers})
+    Ok(Tx{identities, min_signers, identity_index})
 }
 
-fn compute_dkg_round_1(comm: &mut Comm, tx: &mut Tx) -> Result<(), AppSW> {
+fn compute_dkg_round_1(comm: &mut Comm, secret: &Secret, tx: &mut Tx) -> Result<(), AppSW> {
     let mut rng = LedgerRng{};
 
     let (mut round1_secret_package_vec, round1_public_package) = dkg::round1::round1(
-        &tx.identities[0],
+        &secret.to_identity(),
         tx.min_signers as u16,
         &tx.identities,
         &mut rng,
@@ -121,13 +128,17 @@ fn compute_dkg_round_1(comm: &mut Comm, tx: &mut Tx) -> Result<(), AppSW> {
 }
 
 fn send_apdu_chunks(comm: &mut Comm, data: &[u8]) -> Result<(), AppSW> {
-    for chunk in data.chunks(MAX_APDU_SIZE) {
+    let total_chunks = (data.len() + MAX_APDU_SIZE - 1) / MAX_APDU_SIZE;
+
+    for (i, chunk) in data.chunks(MAX_APDU_SIZE).enumerate() {
         comm.append(chunk);
 
-        comm.reply_ok();
-        match comm.next_event() {
-            Event::Command(Instruction::DkgRound1 { chunk: 0 }) => {}
-            _ => {},
+        if i < total_chunks - 1 {
+            comm.reply_ok();
+            match comm.next_event() {
+                Event::Command(Instruction::DkgRound1 { chunk: 0 }) => {}
+                _ => {},
+            }
         }
     }
 

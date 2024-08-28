@@ -29,6 +29,7 @@ const MAX_TRANSACTION_LEN: usize = 2040;
 const MAX_APDU_SIZE: usize = 253;
 
 pub struct Tx {
+    identity_index: u8,
     round_1_public_packages: Vec<PublicPackage>,
     round_1_secret_package: Vec<u8>,
 }
@@ -67,7 +68,7 @@ pub fn handler_dkg_round_2(
         } else{
             // Try to deserialize the transaction
             let mut tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
-            let dkg_secret = compute_dkg_secret();
+            let dkg_secret = compute_dkg_secret(tx.identity_index);
             compute_dkg_round_2(comm, &dkg_secret, &mut tx)
         }
     }
@@ -75,6 +76,9 @@ pub fn handler_dkg_round_2(
 
 fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
     let mut tx_pos:usize = 0;
+
+    let identity_index = raw_tx[tx_pos];
+    tx_pos +=1;
 
     let elements = raw_tx[tx_pos];
     tx_pos +=1;
@@ -100,7 +104,7 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
         return Err("invalid payload");
     }
 
-    Ok(Tx{round_1_secret_package, round_1_public_packages})
+    Ok(Tx{round_1_secret_package, round_1_public_packages,identity_index})
 }
 
 fn compute_dkg_round_2(comm: &mut Comm, secret: &Secret, tx: &mut Tx) -> Result<(), AppSW> {
