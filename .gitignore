@@ -24,3 +24,4 @@ ledger/
 build/
 
 .idea
+.vscode
