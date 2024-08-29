@@ -40,7 +40,7 @@ pub fn handler_dkg_round_2(
     ctx: &mut TxContext,
 ) -> Result<(), AppSW> {
     // Try to get data from comm
-    let data_vec = comm.get_data().map_err(|_| AppSW::WrongApduLength)?.to_vec();
+    let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
     let data = data_vec.as_slice();
 
     // First chunk, try to parse the path
@@ -68,6 +68,9 @@ pub fn handler_dkg_round_2(
         } else{
             // Try to deserialize the transaction
             let mut tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
+            // Reset transaction context as we want to release space on the heap
+            ctx.reset();
+
             let dkg_secret = compute_dkg_secret(tx.identity_index);
             compute_dkg_round_2(comm, &dkg_secret, &mut tx)
         }
