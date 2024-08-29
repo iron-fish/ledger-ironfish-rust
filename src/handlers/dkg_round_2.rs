@@ -76,12 +76,7 @@ pub fn handler_dkg_round_2(
     ctx.reset();
 
     let dkg_secret = compute_dkg_secret(tx.identity_index);
-    let (round2_secret_package_vec, round2_public_package) = match compute_dkg_round_2(dkg_secret, tx){
-        Ok(e)=> e,
-        Err(_e) => {
-            return Err(AppSW::DkgRound2Fail);
-        }
-    };
+    let (round2_secret_package_vec, round2_public_package) = compute_dkg_round_2(dkg_secret, tx).map_err(|_| AppSW::DkgRound2Fail)?;
 
     let response = generate_response(round2_secret_package_vec, round2_public_package);
 
