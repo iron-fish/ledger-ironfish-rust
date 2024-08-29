@@ -50,42 +50,43 @@ pub fn handler_dkg_round_2(
         ctx.reset();
         // This will propagate the error if the path is invalid
         ctx.path = data.try_into()?;
-        Ok(())
+        return Ok(());
+
+    }
+
     // Next chunks, append data to raw_tx and return or parse
     // the transaction if it is the last chunk.
-    } else {
-        if ctx.raw_tx.len() + data.len() > MAX_TRANSACTION_LEN {
-            return Err(AppSW::TxWrongLength);
-        }
-
-        // Append data to raw_tx
-        ctx.raw_tx.extend(data);
-
-        // If we expect more chunks, return
-        if chunk == 1 {
-            ctx.review_finished = false;
-            Ok(())
-        // Otherwise, try to parse the transaction
-        } else{
-            // Try to deserialize the transaction
-            let tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
-            // Reset transaction context as we want to release space on the heap
-            ctx.reset();
-
-            let dkg_secret = compute_dkg_secret(tx.identity_index);
-            let (round2_secret_package_vec, round2_public_package) = match compute_dkg_round_2(dkg_secret, tx){
-                Ok(e)=> e,
-                Err(_e) => {
-                    return Err(AppSW::DkgRound2Fail);
-                }
-            };
-
-            let response = generate_response(round2_secret_package_vec, round2_public_package);
-
-            send_apdu_chunks(comm, &response)?;
-            Ok(())
-        }
+    if ctx.raw_tx.len() + data.len() > MAX_TRANSACTION_LEN {
+        return Err(AppSW::TxWrongLength);
     }
+
+    // Append data to raw_tx
+    ctx.raw_tx.extend(data);
+
+    // If we expect more chunks, return
+    if chunk == 1 {
+        ctx.review_finished = false;
+        return Ok(());
+    // Otherwise, try to parse the transaction
+    }
+
+    // Try to deserialize the transaction
+    let tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
+    // Reset transaction context as we want to release space on the heap
+    ctx.reset();
+
+    let dkg_secret = compute_dkg_secret(tx.identity_index);
+    let (round2_secret_package_vec, round2_public_package) = match compute_dkg_round_2(dkg_secret, tx){
+        Ok(e)=> e,
+        Err(_e) => {
+            return Err(AppSW::DkgRound2Fail);
+        }
+    };
+
+    let response = generate_response(round2_secret_package_vec, round2_public_package);
+
+    send_apdu_chunks(comm, &response)?;
+    Ok(())
 }
 
 fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
