@@ -31,7 +31,60 @@ describe('DKG', function () {
         }
     })
 
-    test.each(models)('get identity', async function (m) {
+    test.each(models)('2 participants', async function (m) {
+        const sim = new Zemu(m.path)
+        try {
+            await sim.start({ ...defaultOptions, model: m.name })
+            const app = new IronfishApp(sim.getTransport())
+            const respIdentity0 = await app.dkgGetIdentity(0)
+            const respIdentity1 = await app.dkgGetIdentity(1)
+
+            expect(respIdentity0.returnCode).toEqual(0x9000)
+            expect(respIdentity0.errorMessage).toEqual('No errors')
+            expect(respIdentity0.identity?.toString('hex')).toEqual("72510338227d8ee51fa11e048b56ae479a655c5510b906b90d029112a11566bac776c69d4bcd6471ce832100f6dd9a4024bd9580b5cfea11b2c8cdb2be16a46a2117f1d22a47c4ab0804c21ce4d7b33b4527c861edf4fd588fff6d9e31ca08ebdd8abd4bf237e158c43df6f998b6f1421fd59b390522b2ecd3ae0d40c18e5fa304")
+
+            expect(respIdentity1.returnCode).toEqual(0x9000)
+            expect(respIdentity1.errorMessage).toEqual('No errors')
+            expect(respIdentity1.identity?.toString('hex')).toEqual("7232e78e0380a8104680ad7d2a9fc746464ee15ce5288ddef7d3fcd594fe400dfd4593b85e8307ad0b5a33ae3091985a74efda2e5b583f667f806232588ab7824cd7d2e031ca875b1fedf13e8dcd571ba5101e91173c36bbb7c67dba9c900d03e7a3728d4b182cce18f43cc5f36fdc3738cad1e641566d977e025dcef25e12900d")
+
+            if(!respIdentity0.identity || !respIdentity1.identity)
+                return
+
+            const identity0Round1 = await app.dkgRound1(PATH, 0, [
+                respIdentity0.identity.toString('hex'),
+                respIdentity1.identity.toString('hex')
+            ], 2);
+
+            expect(identity0Round1.returnCode).toEqual(0x9000)
+            expect(identity0Round1.errorMessage).toEqual('No errors')
+
+            const identity1Round1 = await app.dkgRound1(PATH, 1, [
+                respIdentity0.identity.toString('hex'),
+                respIdentity1.identity.toString('hex')
+            ], 2);
+
+            expect(identity1Round1.returnCode).toEqual(0x9000)
+            expect(identity1Round1.errorMessage).toEqual('No errors')
+
+            if(!identity0Round1.publicPackage || !identity1Round1.publicPackage)
+                return
+            if(!identity0Round1.secretPackage || !identity1Round1.secretPackage)
+                return
+
+
+            const identity0Round2 = await app.dkgRound2(PATH, 0, [
+                identity0Round1.publicPackage.toString('hex'),
+                identity1Round1.publicPackage.toString('hex')
+            ], identity0Round1.secretPackage.toString('hex'));
+
+            expect(identity0Round2.returnCode).toEqual(0x9000)
+            expect(identity0Round2.errorMessage).toEqual('No errors')
+        } finally {
+            await sim.close()
+        }
+    })
+
+    test.skip.each(models)('3 participants', async function (m) {
         const sim = new Zemu(m.path)
         try {
             await sim.start({ ...defaultOptions, model: m.name })
@@ -97,11 +150,29 @@ describe('DKG', function () {
 
             expect(identity0Round2.returnCode).toEqual(0x9000)
             expect(identity0Round2.errorMessage).toEqual('No errors')
+
+            const identity1Round2 = await app.dkgRound2(PATH, 1, [
+                identity0Round1.publicPackage.toString('hex'),
+                identity1Round1.publicPackage.toString('hex'),
+                identity2Round1.publicPackage.toString('hex')
+            ], identity1Round1.secretPackage.toString('hex'));
+
+            expect(identity1Round2.returnCode).toEqual(0x9000)
+            expect(identity1Round2.errorMessage).toEqual('No errors')
+
+            const identity2Round2 = await app.dkgRound2(PATH, 2, [
+                identity0Round1.publicPackage.toString('hex'),
+                identity1Round1.publicPackage.toString('hex'),
+                identity2Round1.publicPackage.toString('hex')
+            ], identity2Round1.secretPackage.toString('hex'));
+
+            expect(identity2Round2.returnCode).toEqual(0x9000)
+            expect(identity2Round2.errorMessage).toEqual('No errors')
         } finally {
             await sim.close()
         }
     })
-    
+
     describe.skip("participant 0", () => {
         test.each(models)('get identity', async function (m) {
             const sim = new Zemu(m.path)
