@@ -20,6 +20,8 @@ use alloc::vec::Vec;
 use ledger_device_sdk::random::LedgerRng;
 use ironfish_frost::dkg;
 use ironfish_frost::dkg::round1::PublicPackage;
+use ironfish_frost::dkg::round2::CombinedPublicPackage;
+use ironfish_frost::error::IronfishFrostError;
 use ironfish_frost::participant::{Secret};
 use ledger_device_sdk::io::{Comm, Event};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
@@ -41,7 +43,6 @@ pub fn handler_dkg_round_2(
 ) -> Result<(), AppSW> {
     // Try to get data from comm
     let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
-    let data = data_vec.as_slice();
 
     // First chunk, try to parse the path
     if chunk == 0 {
@@ -67,12 +68,22 @@ pub fn handler_dkg_round_2(
         // Otherwise, try to parse the transaction
         } else{
             // Try to deserialize the transaction
-            let mut tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
+            let tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
             // Reset transaction context as we want to release space on the heap
             ctx.reset();
 
             let dkg_secret = compute_dkg_secret(tx.identity_index);
-            compute_dkg_round_2(comm, &dkg_secret, &mut tx)
+            let (round2_secret_package_vec, round2_public_package) = match compute_dkg_round_2(dkg_secret, tx){
+                Ok(e)=> e,
+                Err(_e) => {
+                    return Err(AppSW::DkgRound2Fail);
+                }
+            };
+
+            let response = generate_response(round2_secret_package_vec, round2_public_package);
+
+            send_apdu_chunks(comm, &response)?;
+            Ok(())
         }
     }
 }
@@ -110,41 +121,48 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
     Ok(Tx{round_1_secret_package, round_1_public_packages,identity_index})
 }
 
-fn compute_dkg_round_2(comm: &mut Comm, secret: &Secret, tx: &mut Tx) -> Result<(), AppSW> {
+fn compute_dkg_round_2(secret: Secret, tx: Tx) -> Result<(Vec<u8>, CombinedPublicPackage), IronfishFrostError> {
     let mut rng = LedgerRng{};
 
-    let (mut round2_secret_package, round2_public_package) = match dkg::round2::round2(
-        secret,
+   dkg::round2::round2(
+        &secret,
         &tx.round_1_secret_package,
         &tx.round_1_public_packages,
         &mut rng,
-    ) {
-        Ok(e)=> e,
-        Err(_e) => {
-            return Err(AppSW::DkgRound2Fail);
-        }
-    };
-
-
-    let mut resp = round2_public_package.serialize();
-    resp.append(&mut round2_secret_package);
-
-    send_apdu_chunks(comm, resp.as_slice())?;
-
-    Ok(())
+    )
 }
 
+fn generate_response(mut round2_secret_package_vec: Vec<u8>, round2_public_package: CombinedPublicPackage) -> Vec<u8> {
+    let mut resp : Vec<u8> = Vec::new();
+    let mut round2_public_package_vec = round2_public_package.serialize();
+    let round2_public_package_len = round2_public_package_vec.len();
+    let round2_secret_package_len = round2_secret_package_vec.len();
 
-fn send_apdu_chunks(comm: &mut Comm, data: &[u8]) -> Result<(), AppSW> {
-    for chunk in data.chunks(MAX_APDU_SIZE) {
+    resp.append(&mut [(round2_secret_package_len >> 8) as u8, (round2_secret_package_len & 0xFF) as u8].to_vec());
+    resp.append(&mut round2_secret_package_vec);
+    resp.append(&mut [(round2_public_package_len >> 8) as u8, (round2_public_package_len & 0xFF) as u8].to_vec());
+    resp.append(&mut round2_public_package_vec);
+
+    resp
+}
+
+fn send_apdu_chunks(comm: &mut Comm, data_vec: &Vec<u8>) -> Result<(), AppSW> {
+    let data = data_vec.as_slice();
+    let total_chunks = (data.len() + MAX_APDU_SIZE - 1) / MAX_APDU_SIZE;
+
+    comm.append(&data[0..3]);
+/*
+    for (i, chunk) in data.chunks(MAX_APDU_SIZE).enumerate() {
         comm.append(chunk);
 
-        comm.reply_ok();
-        match comm.next_event() {
-            Event::Command(Instruction::DkgRound1 { chunk: 0 }) => {}
-            _ => {},
+        if i < total_chunks - 1 {
+            comm.reply_ok();
+            match comm.next_event() {
+                Event::Command(Instruction::DkgRound1 { chunk: 0 }) => {}
+                _ => {},
+            }
         }
-    }
+    }*/
 
     Ok(())
 }
