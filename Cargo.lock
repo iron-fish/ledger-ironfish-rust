@@ -719,7 +719,7 @@ dependencies = [
 [[package]]
 name = "include_gif"
 version = "1.2.0"
-source = "git+https://github.com/iron-fish/ledger-device-rust-sdk?rev=b316693#b3166936403b238a85f4feba728fe2d2242e6888"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48#b9da8aa13c37bbb12f81e20410961ebd050b5b48"
 dependencies = [
  "flate2",
  "image",
@@ -815,11 +815,11 @@ dependencies = [
 
 [[package]]
 name = "ledger_device_sdk"
-version = "1.14.0"
-source = "git+https://github.com/iron-fish/ledger-device-rust-sdk?rev=b316693#b3166936403b238a85f4feba728fe2d2242e6888"
+version = "1.15.0"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48#b9da8aa13c37bbb12f81e20410961ebd050b5b48"
 dependencies = [
  "const-zero",
- "include_gif 1.2.0 (git+https://github.com/iron-fish/ledger-device-rust-sdk?rev=b316693)",
+ "include_gif 1.2.0 (git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48)",
  "ledger_secure_sdk_sys",
  "num-traits",
  "numtoa",
@@ -829,8 +829,8 @@ dependencies = [
 
 [[package]]
 name = "ledger_secure_sdk_sys"
-version = "1.4.3"
-source = "git+https://github.com/iron-fish/ledger-device-rust-sdk?rev=b316693#b3166936403b238a85f4feba728fe2d2242e6888"
+version = "1.4.4"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48#b9da8aa13c37bbb12f81e20410961ebd050b5b48"
 dependencies = [
  "bindgen",
  "cc",
