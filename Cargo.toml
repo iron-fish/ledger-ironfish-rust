@@ -13,7 +13,7 @@ serde-json-core = { git = "https://github.com/rust-embedded-community/serde-json
 hex = { version = "0.4.3", default-features = false, features = ["serde", "alloc"] }
 numtoa = "0.2.4"
 
-ironfish-frost = { git = "https://github.com/iron-fish/ironfish-frost.git", branch = "no-std", default-features = false, features = ["dkg"]}
+ironfish-frost = { git = "https://github.com/Zondax/ironfish-frost.git", rev = "7c9a998c88874083d9b079908997751b92658fe5", default-features = false, features = ["dkg"]}
 getrandom = { version = "0.2", features = ["custom"] }
 
 [profile.release]

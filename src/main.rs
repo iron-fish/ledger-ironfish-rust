@@ -31,6 +31,7 @@ mod handlers {
     pub mod dkg_get_identity;
     pub mod dkg_round_1;
     pub mod dkg_round_2;
+    pub mod dkg_round_3;
 }
 
 mod settings;
@@ -43,6 +44,7 @@ use handlers::{
     dkg_get_identity::handler_dkg_get_identity,
     dkg_round_1::{handler_dkg_round_1},
     dkg_round_2::{handler_dkg_round_2},
+    dkg_round_3::{handler_dkg_round_3},
 };
 use ledger_device_sdk::io::{ApduHeader, Comm, Event, Reply, StatusWords};
 #[cfg(feature = "pending_review_screen")]
@@ -83,6 +85,7 @@ pub enum AppSW {
     KeyDeriveFail = 0xB009,
     VersionParsingFail = 0xB00A,
     DkgRound2Fail = 0xB00B,
+    DkgRound3Fail = 0xB00C,
     WrongApduLength = StatusWords::BadLen as u16,
     Ok = 0x9000,
 }
@@ -102,6 +105,7 @@ pub enum Instruction {
     DkgGetIdentity,
     DkgRound1 { chunk: u8 },
     DkgRound2 { chunk: u8 },
+    DkgRound3 { chunk: u8 },
 }
 
 impl TryFrom<ApduHeader> for Instruction {
@@ -140,6 +144,11 @@ impl TryFrom<ApduHeader> for Instruction {
             },
             (18, 0..=2, 0) => {
                 Ok(Instruction::DkgRound2 {
+                    chunk: value.p1
+                })
+            },
+            (19, 0..=2, 0) => {
+                Ok(Instruction::DkgRound3 {
                     chunk: value.p1
                 })
             },
@@ -223,5 +232,6 @@ fn handle_apdu(comm: &mut Comm, ins: &Instruction, ctx: &mut TxContext) -> Resul
         Instruction::DkgGetIdentity => handler_dkg_get_identity(comm),
         Instruction::DkgRound1 { chunk } => handler_dkg_round_1(comm, *chunk, ctx),
         Instruction::DkgRound2 { chunk } => handler_dkg_round_2(comm, *chunk, ctx),
+        Instruction::DkgRound3 { chunk } => handler_dkg_round_3(comm, *chunk, ctx),
     }
 }
