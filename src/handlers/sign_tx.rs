@@ -61,7 +61,11 @@ impl TxContext {
     }
     // Implement reset for TxInfo
     pub fn reset(&mut self) {
+        // Clean all values on the vec
         self.raw_tx.clear();
+        // Recover the space from the heap (clear does not release the space from the heap)
+        self.raw_tx.shrink_to_fit();
+
         self.path = Default::default();
         self.review_finished = false;
     }

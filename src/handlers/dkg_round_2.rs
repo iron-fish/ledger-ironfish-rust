@@ -78,7 +78,12 @@ pub fn handler_dkg_round_2(
     let dkg_secret = compute_dkg_secret(tx.identity_index);
     let (round2_secret_package_vec, round2_public_package) = compute_dkg_round_2(dkg_secret, tx).map_err(|_| AppSW::DkgRound2Fail)?;
 
-    let response = generate_response(round2_secret_package_vec, round2_public_package);
+    let (mut round2_secret_package_vec, round2_public_package) = compute_dkg_round_2(&dkg_secret, &tx).map_err(|_| AppSW::DkgRound2Fail)?;
+    drop(tx);
+    drop(dkg_secret);
+    let response = generate_response(&mut round2_secret_package_vec, &round2_public_package);
+    drop(round2_secret_package_vec);
+    drop(round2_public_package);
 
     send_apdu_chunks(comm, &response)?;
     Ok(())
@@ -117,18 +122,18 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
     Ok(Tx{round_1_secret_package, round_1_public_packages,identity_index})
 }
 
-fn compute_dkg_round_2(secret: Secret, tx: Tx) -> Result<(Vec<u8>, CombinedPublicPackage), IronfishFrostError> {
+fn compute_dkg_round_2(secret: &Secret, tx: &Tx) -> Result<(Vec<u8>, CombinedPublicPackage), IronfishFrostError> {
     let mut rng = LedgerRng{};
 
    dkg::round2::round2(
-        &secret,
+        secret,
         &tx.round_1_secret_package,
         &tx.round_1_public_packages,
         &mut rng,
     )
 }
 
-fn generate_response(mut round2_secret_package_vec: Vec<u8>, round2_public_package: CombinedPublicPackage) -> Vec<u8> {
+fn generate_response(mut round2_secret_package_vec: &mut Vec<u8>, round2_public_package: &CombinedPublicPackage) -> Vec<u8> {
     let mut resp : Vec<u8> = Vec::new();
     let mut round2_public_package_vec = round2_public_package.serialize();
     let round2_public_package_len = round2_public_package_vec.len();
@@ -146,19 +151,17 @@ fn send_apdu_chunks(comm: &mut Comm, data_vec: &Vec<u8>) -> Result<(), AppSW> {
     let data = data_vec.as_slice();
     let total_chunks = (data.len() + MAX_APDU_SIZE - 1) / MAX_APDU_SIZE;
 
-    comm.append(&data[0..3]);
-/*
     for (i, chunk) in data.chunks(MAX_APDU_SIZE).enumerate() {
         comm.append(chunk);
 
         if i < total_chunks - 1 {
             comm.reply_ok();
             match comm.next_event() {
-                Event::Command(Instruction::DkgRound1 { chunk: 0 }) => {}
+                Event::Command(Instruction::DkgRound2 { chunk: 0 }) => {}
                 _ => {},
             }
         }
-    }*/
+    }
 
     Ok(())
 }
