@@ -17,7 +17,6 @@
 
 use crate::{AppSW, Instruction};
 use alloc::vec::Vec;
-use ledger_device_sdk::random::LedgerRng;
 use ironfish_frost::dkg;
 use ironfish_frost::dkg::group_key::GroupSecretKey;
 use ironfish_frost::dkg::round1::PublicPackage;
@@ -27,8 +26,8 @@ use ironfish_frost::error::IronfishFrostError;
 use ironfish_frost::frost::keys::KeyPackage;
 use ironfish_frost::participant::{Secret};
 use ledger_device_sdk::io::{Comm, Event};
+use crate::contex::TxContext;
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
-use crate::handlers::sign_tx::TxContext;
 
 const MAX_TRANSACTION_LEN: usize = 4080;
 const MAX_APDU_SIZE: usize = 253;

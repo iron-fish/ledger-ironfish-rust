@@ -20,13 +20,10 @@
 
 mod utils;
 mod app_ui {
-    pub mod address;
     pub mod menu;
-    pub mod sign;
 }
 mod handlers {
     pub mod get_version;
-    pub mod sign_tx;
     pub mod dkg_get_identity;
     pub mod dkg_round_1;
     pub mod dkg_round_2;
@@ -34,11 +31,11 @@ mod handlers {
 }
 
 mod settings;
+mod contex;
 
 use app_ui::menu::ui_menu_main;
 use handlers::{
     get_version::handler_get_version,
-    sign_tx::{handler_sign_tx, TxContext},
     dkg_get_identity::handler_dkg_get_identity,
     dkg_round_1::{handler_dkg_round_1},
     dkg_round_2::{handler_dkg_round_2},
@@ -56,6 +53,7 @@ extern crate alloc;
 
 #[cfg(any(target_os = "stax", target_os = "flex"))]
 use ledger_device_sdk::nbgl::{init_comm, NbglReviewStatus, StatusType};
+use crate::contex::TxContext;
 
 // P2 for last APDU to receive.
 const P2_SIGN_TX_LAST: u8 = 0x00;
@@ -98,8 +96,6 @@ impl From<AppSW> for Reply {
 pub enum Instruction {
     GetVersion,
     GetAppName,
-    GetPubkey { display: bool },
-    SignTx { chunk: u8, more: bool },
     DkgGetIdentity,
     DkgRound1 { chunk: u8 },
     DkgRound2 { chunk: u8 },
@@ -124,13 +120,6 @@ impl TryFrom<ApduHeader> for Instruction {
         match (value.ins, value.p1, value.p2) {
             (3, 0, 0) => Ok(Instruction::GetVersion),
             (4, 0, 0) => Ok(Instruction::GetAppName),
-            (6, P1_SIGN_TX_START, P2_SIGN_TX_MORE)
-            | (6, 1..=P1_SIGN_TX_MAX, P2_SIGN_TX_LAST | P2_SIGN_TX_MORE) => {
-                Ok(Instruction::SignTx {
-                    chunk: value.p1,
-                    more: value.p2 == P2_SIGN_TX_MORE,
-                })
-            },
             (16, 0, 0) => Ok(Instruction::DkgGetIdentity),
             (17, 0..=2, 0) => {
                 Ok(Instruction::DkgRound1 {
@@ -222,7 +211,6 @@ fn handle_apdu(comm: &mut Comm, ins: &Instruction, ctx: &mut TxContext) -> Resul
             Ok(())
         }
         Instruction::GetVersion => handler_get_version(comm),
-        Instruction::SignTx { chunk, more } => handler_sign_tx(comm, *chunk, *more, ctx),
         Instruction::DkgGetIdentity => handler_dkg_get_identity(comm),
         Instruction::DkgRound1 { chunk } => handler_dkg_round_1(comm, *chunk, ctx),
         Instruction::DkgRound2 { chunk } => handler_dkg_round_2(comm, *chunk, ctx),

@@ -25,7 +25,7 @@ use ironfish_frost::error::IronfishFrostError;
 use ironfish_frost::participant::{Secret};
 use ledger_device_sdk::io::{Comm, Event};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
-use crate::handlers::sign_tx::TxContext;
+use crate::contex::TxContext;
 
 const MAX_TRANSACTION_LEN: usize = 4080;
 const MAX_APDU_SIZE: usize = 253;
