@@ -22,11 +22,13 @@ use crate::AppSW;
 use ledger_device_sdk::ecc::{Secret, bip32_derive, CurvesId, ChainCode};
 use ledger_device_sdk::io::Comm;
 
+const MAX_IDENTITY_INDEX:u8 = 5;
+
 pub fn handler_dkg_get_identity(comm: &mut Comm) -> Result<(), AppSW> {
     let data_vec = comm.get_data().map_err(|_| AppSW::WrongApduLength)?.to_vec();
     let data = data_vec.as_slice();
 
-    if data.len() != 1 || data[0] > 2{
+    if data.len() != 1 || data[0] >= MAX_IDENTITY_INDEX{
         return Err(AppSW::TxParsingFail);
     }
 

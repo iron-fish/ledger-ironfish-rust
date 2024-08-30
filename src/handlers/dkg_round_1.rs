@@ -24,7 +24,7 @@ use ledger_device_sdk::io::{Comm, Event};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
 use crate::handlers::sign_tx::TxContext;
 
-const MAX_TRANSACTION_LEN: usize = 510;
+const MAX_TRANSACTION_LEN: usize = 2040;
 const MAX_APDU_SIZE: usize = 253;
 
 pub struct Tx {
