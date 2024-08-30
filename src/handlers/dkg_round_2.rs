@@ -76,17 +76,15 @@ pub fn handler_dkg_round_2(
     ctx.reset();
 
     let dkg_secret = compute_dkg_secret(tx.identity_index);
-    let (round2_secret_package_vec, round2_public_package) = compute_dkg_round_2(dkg_secret, tx).map_err(|_| AppSW::DkgRound2Fail)?;
-
     let (mut round2_secret_package_vec, round2_public_package) = compute_dkg_round_2(&dkg_secret, &tx).map_err(|_| AppSW::DkgRound2Fail)?;
     drop(tx);
     drop(dkg_secret);
+
     let response = generate_response(&mut round2_secret_package_vec, &round2_public_package);
     drop(round2_secret_package_vec);
     drop(round2_public_package);
 
-    send_apdu_chunks(comm, &response)?;
-    Ok(())
+    send_apdu_chunks(comm, &response)
 }
 
 fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
