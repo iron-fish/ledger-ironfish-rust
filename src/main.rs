@@ -25,7 +25,6 @@ mod app_ui {
     pub mod sign;
 }
 mod handlers {
-    pub mod get_public_key;
     pub mod get_version;
     pub mod sign_tx;
     pub mod dkg_get_identity;
@@ -38,7 +37,6 @@ mod settings;
 
 use app_ui::menu::ui_menu_main;
 use handlers::{
-    get_public_key::handler_get_public_key,
     get_version::handler_get_version,
     sign_tx::{handler_sign_tx, TxContext},
     dkg_get_identity::handler_dkg_get_identity,
@@ -126,9 +124,6 @@ impl TryFrom<ApduHeader> for Instruction {
         match (value.ins, value.p1, value.p2) {
             (3, 0, 0) => Ok(Instruction::GetVersion),
             (4, 0, 0) => Ok(Instruction::GetAppName),
-            (5, 0 | 1, 0) => Ok(Instruction::GetPubkey {
-                display: value.p1 != 0,
-            }),
             (6, P1_SIGN_TX_START, P2_SIGN_TX_MORE)
             | (6, 1..=P1_SIGN_TX_MAX, P2_SIGN_TX_LAST | P2_SIGN_TX_MORE) => {
                 Ok(Instruction::SignTx {
@@ -227,7 +222,6 @@ fn handle_apdu(comm: &mut Comm, ins: &Instruction, ctx: &mut TxContext) -> Resul
             Ok(())
         }
         Instruction::GetVersion => handler_get_version(comm),
-        Instruction::GetPubkey { display } => handler_get_public_key(comm, *display),
         Instruction::SignTx { chunk, more } => handler_sign_tx(comm, *chunk, *more, ctx),
         Instruction::DkgGetIdentity => handler_dkg_get_identity(comm),
         Instruction::DkgRound1 { chunk } => handler_dkg_round_1(comm, *chunk, ctx),
