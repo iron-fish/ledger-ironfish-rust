@@ -23,6 +23,7 @@ use ironfish_frost::participant::{Identity, Secret};
 use ledger_device_sdk::io::{Comm, Event};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
 use crate::contex::TxContext;
+use crate::utils::zlog;
 
 const MAX_TRANSACTION_LEN: usize = 2040;
 const MAX_APDU_SIZE: usize = 253;
@@ -103,6 +104,8 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
 }
 
 fn compute_dkg_round_1(comm: &mut Comm, secret: &Secret, tx: &mut Tx) -> Result<(), AppSW> {
+    zlog("start compute_dkg_round_1\n\0");
+
     let mut rng = LedgerRng{};
 
     let (mut round1_secret_package_vec, round1_public_package) = dkg::round1::round1(

@@ -28,6 +28,7 @@ use ironfish_frost::participant::{Secret};
 use ledger_device_sdk::io::{Comm, Event};
 use crate::contex::TxContext;
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
+use crate::utils::zlog;
 
 const MAX_TRANSACTION_LEN: usize = 4080;
 const MAX_APDU_SIZE: usize = 253;
@@ -91,6 +92,8 @@ pub fn handler_dkg_round_3(
 }
 
 fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
+    zlog("start parse_tx round3\n\0");
+
     let mut tx_pos:usize = 0;
 
     let identity_index = raw_tx[tx_pos];
@@ -134,10 +137,14 @@ fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
         return Err("invalid payload");
     }
 
+    zlog("done parse_tx round3\n\0");
+
     Ok(Tx{round_2_secret_package, round_1_public_packages, round_2_public_packages, identity_index})
 }
 
 fn compute_dkg_round_3(secret: &Secret, tx: &Tx) -> Result<(KeyPackage, PublicKeyPackage, GroupSecretKey), IronfishFrostError> {
+    zlog("start compute_dkg_round_3\n\0");
+
    dkg::round3::round3(
         secret,
         &tx.round_2_secret_package,

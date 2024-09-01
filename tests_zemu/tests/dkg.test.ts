@@ -32,8 +32,8 @@ const identities  = [
 // ONE_GLOBAL_APP: Use this flag if the whole DKG process will run in only one app (all participants, all rounds). This takes precedence over ONE_APP_PER_PARTICIPANT.
 // ONE_APP_PER_PARTICIPANT: Use this flag if the whole DKG process will run in one app per participant
 // Otherwise, if both are falsy, one app will be started per request (each round for each participant)
-const ONE_GLOBAL_APP = 1;
-const ONE_APP_PER_PARTICIPANT = 1;
+const ONE_GLOBAL_APP = 0;
+const ONE_APP_PER_PARTICIPANT = 0;
 
 describe.each(models)('DKG', function (m) {
     it.skip('can start and stop container', async function () {

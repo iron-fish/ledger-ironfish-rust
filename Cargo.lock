@@ -438,8 +438,7 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "embedded-alloc"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddae17915accbac2cfbc64ea0ae6e3b330e6ea124ba108dada63646fd3c6f815"
+source = "git+https://github.com/Zondax/embedded-alloc?rev=2213d663b1e6f145fd1928f192dae2bdcb980b2d#2213d663b1e6f145fd1928f192dae2bdcb980b2d"
 dependencies = [
  "critical-section",
  "linked_list_allocator",
@@ -719,7 +718,7 @@ dependencies = [
 [[package]]
 name = "include_gif"
 version = "1.2.0"
-source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48#b9da8aa13c37bbb12f81e20410961ebd050b5b48"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de#3785307287c63035ee6b381d56a1f787d83237de"
 dependencies = [
  "flate2",
  "image",
@@ -738,7 +737,7 @@ dependencies = [
 [[package]]
 name = "ironfish-frost"
 version = "0.1.0"
-source = "git+https://github.com/Zondax/ironfish-frost.git?rev=7c9a998c88874083d9b079908997751b92658fe5#7c9a998c88874083d9b079908997751b92658fe5"
+source = "git+https://github.com/Zondax/ironfish-frost.git?rev=f0405d7d0eaeb49ba0a9d707314cc2d659bf4489#f0405d7d0eaeb49ba0a9d707314cc2d659bf4489"
 dependencies = [
  "chacha20",
  "chacha20poly1305",
@@ -816,10 +815,10 @@ dependencies = [
 [[package]]
 name = "ledger_device_sdk"
 version = "1.15.0"
-source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48#b9da8aa13c37bbb12f81e20410961ebd050b5b48"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de#3785307287c63035ee6b381d56a1f787d83237de"
 dependencies = [
  "const-zero",
- "include_gif 1.2.0 (git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48)",
+ "include_gif 1.2.0 (git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de)",
  "ledger_secure_sdk_sys",
  "num-traits",
  "numtoa",
@@ -830,7 +829,7 @@ dependencies = [
 [[package]]
 name = "ledger_secure_sdk_sys"
 version = "1.4.4"
-source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=b9da8aa13c37bbb12f81e20410961ebd050b5b48#b9da8aa13c37bbb12f81e20410961ebd050b5b48"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de#3785307287c63035ee6b381d56a1f787d83237de"
 dependencies = [
  "bindgen",
  "cc",
