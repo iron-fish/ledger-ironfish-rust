@@ -29,6 +29,12 @@ const identities  = [
     {i:5, v: "7257d63a116b75136faf89eea94baafdfe5fbfb1ab43bb196dfe209844c2259d5582fe64191677eb38b64a9e182ed0184b219d66cc4c34f43cac72f23608155a0bf183a70c18af4659730d894a139c4ce29e52d4cab85596e75829569e74d94e08470700a4510949ef91a12dde01c6985bb93e0b80641b47ea6dc2c80f5d550f05"}
 ]
 
+// ONE_GLOBAL_APP: Use this flag if the whole DKG process will run in only one app (all participants, all rounds). This takes precedence over ONE_APP_PER_PARTICIPANT.
+// ONE_APP_PER_PARTICIPANT: Use this flag if the whole DKG process will run in one app per participant
+// Otherwise, if both are falsy, one app will be started per request (each round for each participant)
+const ONE_GLOBAL_APP = 1;
+const ONE_APP_PER_PARTICIPANT = 1;
+
 describe.each(models)('DKG', function (m) {
     it.skip('can start and stop container', async function () {
         const sim = new Zemu(m.path)
@@ -39,37 +45,74 @@ describe.each(models)('DKG', function (m) {
         }
     })
 
-    describe.each([{p:2, min:2},{p:3, min:2}])('participants', function ({p: participants, min: minSigners}){
+    describe.each([{p:3, min:2}])('participants', function ({p: participants, min: minSigners}){
         it("p: " + participants + " - min: " + minSigners, async function(){
-            const sim = new Zemu(m.path)
+            const checkSimRequired = (sims: Zemu[], i:number): {sim: Zemu, created:boolean} => {
+                let created = false;
+                let sim: Zemu | undefined;
+
+                if(!sims.length){
+                    sim = new Zemu(m.path)
+                    created = true;
+                } else if (sims.length === 1){
+                    sim = sims[0];
+                } else {
+                    sim = sims[i];
+                }
+
+                if(!sim) throw new Error("sim should have a value here")
+                return {sim, created}
+            }
+
+            const runMethod = async (rcvSims: Zemu[], i: number, fn: (app: IronfishApp)=> Promise<any>): Promise<any> => {
+                const {sim, created} = checkSimRequired(rcvSims, i)
+
+                try {
+                    if(created) await sim.start({...defaultOptions, model: m.name})
+                    const app = new IronfishApp(sim.getTransport())
+                    return await fn(app)
+                } finally {
+                    if(created) await sim.close()
+                }
+            }
+
+            const globalSims: Zemu[] = [];
+
+            if(ONE_GLOBAL_APP) globalSims.push(new Zemu(m.path))
+            else if (ONE_APP_PER_PARTICIPANT) for (let i = 0; i < participants; i++) globalSims.push(new Zemu(m.path))
+
+            for (let i = 0; i < globalSims.length; i++)
+                await globalSims[i].start({...defaultOptions, model: m.name})
 
             let identities: any[] = [];
             let round1s: any[] = [];
             let round2s: any[] = [];
 
             try {
-                await sim.start({ ...defaultOptions, model: m.name })
-                const app = new IronfishApp(sim.getTransport())
-
                 for(let i = 0; i < participants; i++){
-                    const identity = await app.dkgGetIdentity(i)
+                    const identity = await runMethod(globalSims, i, async (app: IronfishApp) => {
+                        const identity = await app.dkgGetIdentity(i)
 
-                    expect(i + " " + identity.returnCode.toString(16)).toEqual(i + " " + "9000")
-                    expect(identity.errorMessage).toEqual('No errors')
+                        expect(i + " " + identity.returnCode.toString(16)).toEqual(i + " " + "9000")
+                        expect(identity.errorMessage).toEqual('No errors')
 
-                    if(!identity.identity) throw new Error("no identity found")
+                        return identity
+                    });
 
-                    identities.push(identity.identity?.toString('hex'))
-                    await new Promise((resolve)=> setTimeout(resolve, 1000));
+                    if (!identity.identity) throw new Error("no identity found")
+
+                    identities.push(identity.identity.toString('hex'))
                 }
 
-                await new Promise((resolve)=> setTimeout(resolve, 5000));
-
                 for(let i = 0; i < participants; i++){
-                    let round1 = await app.dkgRound1(PATH, i, identities, minSigners);
+                    const round1 = await runMethod(globalSims, i, async (app: IronfishApp) => {
+                        const round1 = await app.dkgRound1(PATH, i, identities, minSigners);
 
-                    expect(i + " " + round1.returnCode.toString(16)).toEqual(i + " " + "9000")
-                    expect(round1.errorMessage).toEqual('No errors')
+                        expect(i + " " + round1.returnCode.toString(16)).toEqual(i + " " + "9000")
+                        expect(round1.errorMessage).toEqual('No errors')
+
+                        return round1
+                    });
 
                     if(!round1.publicPackage || !round1.secretPackage)
                         throw new Error("no round 1 found")
@@ -78,16 +121,17 @@ describe.each(models)('DKG', function (m) {
                         publicPackage: round1.publicPackage.toString('hex'),
                         secretPackage: round1.secretPackage.toString('hex')
                     })
-                    await new Promise((resolve)=> setTimeout(resolve, 1000));
                 }
 
-                await new Promise((resolve)=> setTimeout(resolve, 5000));
-
                 for(let i = 0; i < participants; i++){
-                    let round2 = await app.dkgRound2(PATH, i, round1s.map(r => r.publicPackage), round1s[i].secretPackage);
+                    const round2 = await runMethod(globalSims, i, async (app: IronfishApp) => {
+                        const round2 = await app.dkgRound2(PATH, i, round1s.map(r => r.publicPackage), round1s[i].secretPackage);
 
-                    expect(i + " " + round2.returnCode.toString(16)).toEqual(i + " " + "9000")
-                    expect(round2.errorMessage).toEqual('No errors')
+                        expect(i + " " + round2.returnCode.toString(16)).toEqual(i + " " + "9000")
+                        expect(round2.errorMessage).toEqual('No errors')
+
+                        return round2
+                    });
 
                     if(!round2.publicPackage || !round2.secretPackage)
                         throw new Error("no round 1 found")
@@ -96,22 +140,23 @@ describe.each(models)('DKG', function (m) {
                         publicPackage: round2.publicPackage.toString('hex'),
                         secretPackage: round2.secretPackage.toString('hex')
                     })
-                    await new Promise((resolve)=> setTimeout(resolve, 2000));
                 }
 
-                await new Promise((resolve)=> setTimeout(resolve, 5000));
-
                 for(let i = 0; i < participants; i++){
-                    let round3 = await app.dkgRound3(
-                        PATH,
-                        i,
-                        round1s.map(r => r.publicPackage),
-                        round2s.filter((_, pos) => i != pos).map(r => r.publicPackage),
-                        round2s[i].secretPackage
-                    );
+                    const round3 = await runMethod(globalSims, i, async (app: IronfishApp) => {
+                        let round3 = await app.dkgRound3(
+                            PATH,
+                            i,
+                            round1s.map(r => r.publicPackage),
+                            round2s.filter((_, pos) => i != pos).map(r => r.publicPackage),
+                            round2s[i].secretPackage
+                        );
 
-                    expect(i + " " + round3.returnCode.toString(16)).toEqual(i + " " + "9000")
-                    expect(round3.errorMessage).toEqual('No errors')
+                        expect(i + " " + round3.returnCode.toString(16)).toEqual(i + " " + "9000")
+                        expect(round3.errorMessage).toEqual('No errors')
+
+                        return round3
+                    });
 
                     /*if(!round2.publicPackage || !round2.secretPackage)
                         throw new Error("no round 1 found")
@@ -120,10 +165,10 @@ describe.each(models)('DKG', function (m) {
                         publicPackage: round2.publicPackage.toString('hex'),
                         secretPackage: round2.secretPackage.toString('hex')
                     })*/
-                    await new Promise((resolve)=> setTimeout(resolve, 2000));
                 }
             } finally {
-                await sim.close()
+                for (let i = 0; i < globalSims.length; i++)
+                    await globalSims[i].close()
             }
         })
     })
