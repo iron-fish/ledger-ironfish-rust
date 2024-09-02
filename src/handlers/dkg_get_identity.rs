@@ -40,6 +40,7 @@ pub fn handler_dkg_get_identity(comm: &mut Comm) -> Result<(), AppSW> {
     Ok(())
 }
 
+#[inline(never)]
 pub fn compute_dkg_secret(index: u8) -> ironfishSecret {
     let index_1 = (index * 2) as u32;
     let index_2 = index_1 + 1;
