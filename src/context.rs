@@ -1,4 +1,3 @@
-use alloc::vec::Vec;
 use crate::utils::Bip32Path;
 
 pub struct TxContext {

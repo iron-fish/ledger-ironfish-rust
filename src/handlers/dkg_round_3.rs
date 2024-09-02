@@ -29,9 +29,8 @@ use ledger_device_sdk::io::{Comm, Event};
 use crate::buffer::{Buffer, BUFFER_SIZE};
 use crate::context::TxContext;
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
-use crate::utils::zlog;
+use crate::utils::{zlog, zlog_stack};
 
-const MAX_TRANSACTION_LEN: usize = 4080;
 const MAX_APDU_SIZE: usize = 253;
 
 pub struct Tx {
@@ -46,6 +45,8 @@ pub fn handler_dkg_round_3(
     chunk: u8,
     ctx: &mut TxContext,
 ) -> Result<(), AppSW> {
+    zlog_stack("start parse_tx handler_dkg_round_3\0");
+
     // Try to get data from comm
     let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
 
@@ -94,7 +95,7 @@ pub fn handler_dkg_round_3(
 }
 
 fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
-    zlog("start parse_tx round3\n\0");
+    zlog_stack("start parse_tx round3\0");
 
     let mut tx_pos:usize = 0;
 
@@ -139,13 +140,13 @@ fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
         return Err("invalid payload");
     }
 
-    zlog("done parse_tx round3\n\0");
+    zlog_stack("done parse_tx round3\0");
 
     Ok(Tx{round_2_secret_package, round_1_public_packages, round_2_public_packages, identity_index})
 }
 
 fn compute_dkg_round_3(secret: &Secret, tx: &Tx) -> Result<(KeyPackage, PublicKeyPackage, GroupSecretKey), IronfishFrostError> {
-    zlog("start compute_dkg_round_3\n\0");
+    zlog_stack("start compute_dkg_round_3\0");
 
    dkg::round3::round3(
         secret,

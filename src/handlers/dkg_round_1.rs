@@ -26,7 +26,6 @@ use crate::handlers::dkg_get_identity::compute_dkg_secret;
 use crate::context::TxContext;
 use crate::utils::zlog;
 
-const MAX_TRANSACTION_LEN: usize = 2040;
 const MAX_APDU_SIZE: usize = 253;
 
 pub struct Tx {

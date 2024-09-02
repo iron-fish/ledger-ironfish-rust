@@ -27,9 +27,8 @@ use ledger_device_sdk::io::{Comm, Event};
 use crate::buffer::{Buffer, BUFFER_SIZE};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
 use crate::context::TxContext;
-use crate::utils::zlog;
+use crate::utils::{zlog, zlog_stack};
 
-const MAX_TRANSACTION_LEN: usize = 4080;
 const MAX_APDU_SIZE: usize = 253;
 
 pub struct Tx {
@@ -43,6 +42,8 @@ pub fn handler_dkg_round_2(
     chunk: u8,
     ctx: &mut TxContext,
 ) -> Result<(), AppSW> {
+    zlog_stack("start parse_tx handler_dkg_round_2\0");
+
     // Try to get data from comm
     let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
 
@@ -92,6 +93,8 @@ pub fn handler_dkg_round_2(
 }
 
 fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
+    zlog_stack("start parse_tx round2\0");
+
     let mut tx_pos:usize = 0;
 
     let identity_index = Buffer.get_element(tx_pos);
@@ -125,7 +128,7 @@ fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
 }
 
 fn compute_dkg_round_2(secret: &Secret, tx: &Tx) -> Result<(Vec<u8>, CombinedPublicPackage), IronfishFrostError> {
-    zlog("start compute_dkg_round_2\n\0");
+    zlog_stack("start compute_dkg_round_2\0");
 
     let mut rng = LedgerRng{};
 
