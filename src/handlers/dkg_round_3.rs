@@ -26,6 +26,7 @@ use ironfish_frost::error::IronfishFrostError;
 use ironfish_frost::frost::keys::KeyPackage;
 use ironfish_frost::participant::{Secret};
 use ledger_device_sdk::io::{Comm, Event};
+use crate::accumulator::accumulate_data;
 use crate::buffer::{Buffer, BUFFER_SIZE};
 use crate::context::TxContext;
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
@@ -45,36 +46,11 @@ pub fn handler_dkg_round_3(
     chunk: u8,
     ctx: &mut TxContext,
 ) -> Result<(), AppSW> {
-    zlog_stack("start parse_tx handler_dkg_round_3\0");
+    zlog_stack("start handler_dkg_round_3\0");
 
-    // Try to get data from comm
-    let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
-
-    // First chunk, try to parse the path
-    if chunk == 0 {
-        // Reset transaction context
-        ctx.reset();
-        // This will propagate the error if the path is invalid
-        ctx.path = data.try_into()?;
+    accumulate_data(comm, chunk, ctx)?;
+    if !ctx.done {
         return Ok(());
-
-    }
-
-    // Next chunks, append data to raw_tx and return or parse
-    // the transaction if it is the last chunk.
-    if ctx.buffer_pos + data.len() > BUFFER_SIZE {
-        return Err(AppSW::TxWrongLength);
-    }
-
-    // Append data to raw_tx
-    Buffer.set_slice(ctx.buffer_pos, data);
-    ctx.buffer_pos += data.len();
-
-    // If we expect more chunks, return
-    if chunk == 1 {
-        ctx.review_finished = false;
-        return Ok(());
-    // Otherwise, try to parse the transaction
     }
 
     // Try to deserialize the transaction

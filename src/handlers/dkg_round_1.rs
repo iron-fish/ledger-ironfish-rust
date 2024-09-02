@@ -21,10 +21,11 @@ use ledger_device_sdk::random::LedgerRng;
 use ironfish_frost::dkg;
 use ironfish_frost::participant::{Identity, Secret};
 use ledger_device_sdk::io::{Comm, Event};
+use crate::accumulator::accumulate_data;
 use crate::buffer::{Buffer, BUFFER_SIZE};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
 use crate::context::TxContext;
-use crate::utils::zlog;
+use crate::utils::{zlog, zlog_stack};
 
 const MAX_APDU_SIZE: usize = 253;
 
@@ -39,41 +40,16 @@ pub fn handler_dkg_round_1(
     chunk: u8,
     ctx: &mut TxContext,
 ) -> Result<(), AppSW> {
-    // Try to get data from comm
-    let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
+    zlog_stack("start handler_dkg_round_1\0");
 
-    // First chunk, try to parse the path
-    if chunk == 0 {
-        // Reset transaction context
-        ctx.reset();
-        // This will propagate the error if the path is invalid
-        ctx.path = data.try_into()?;
-        Ok(())
-    // Next chunks, append data to raw_tx and return or parse
-    // the transaction if it is the last chunk.
-    } else {
-        if ctx.buffer_pos + data.len() > BUFFER_SIZE {
-            return Err(AppSW::TxWrongLength);
-        }
-
-        // Append data to raw_tx
-        Buffer.set_slice(ctx.buffer_pos, data);
-        ctx.buffer_pos += data.len();
-
-        // If we expect more chunks, return
-        if chunk == 1 {
-            ctx.review_finished = false;
-            Ok(())
-        // Otherwise, try to parse the transaction
-        } else{
-            //comm.append(data);
-            //Ok(())
-            // Try to deserialize the transaction
-            let mut tx: Tx = parse_tx(ctx.buffer_pos).map_err(|_| AppSW::TxParsingFail)?;
-            let dkg_secret = compute_dkg_secret(tx.identity_index);
-            compute_dkg_round_1(comm, &dkg_secret, &mut tx)
-        }
+    accumulate_data(comm, chunk, ctx)?;
+    if !ctx.done {
+        return Ok(());
     }
+
+    let mut tx: Tx = parse_tx(ctx.buffer_pos).map_err(|_| AppSW::TxParsingFail)?;
+    let dkg_secret = compute_dkg_secret(tx.identity_index);
+    compute_dkg_round_1(comm, &dkg_secret, &mut tx)
 }
 
 fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{

@@ -32,6 +32,7 @@ mod handlers {
 
 mod context;
 mod buffer;
+mod accumulator;
 
 use app_ui::menu::ui_menu_main;
 use handlers::{
@@ -54,15 +55,6 @@ extern crate alloc;
 #[cfg(any(target_os = "stax", target_os = "flex"))]
 use ledger_device_sdk::nbgl::{init_comm, NbglReviewStatus, StatusType};
 use crate::context::TxContext;
-
-// P2 for last APDU to receive.
-const P2_SIGN_TX_LAST: u8 = 0x00;
-// P2 for more APDU to receive.
-const P2_SIGN_TX_MORE: u8 = 0x80;
-// P1 for first APDU number.
-const P1_SIGN_TX_START: u8 = 0x00;
-// P1 for maximum APDU number.
-const P1_SIGN_TX_MAX: u8 = 0x03;
 
 // Application status words.
 #[repr(u16)]
