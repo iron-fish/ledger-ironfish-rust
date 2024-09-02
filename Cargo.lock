@@ -438,7 +438,7 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "embedded-alloc"
 version = "0.5.1"
-source = "git+https://github.com/Zondax/embedded-alloc?rev=2213d663b1e6f145fd1928f192dae2bdcb980b2d#2213d663b1e6f145fd1928f192dae2bdcb980b2d"
+source = "git+https://github.com/Zondax/embedded-alloc?rev=9e3bdd2588bfd3bd68117fd529ececafb0544bdc#9e3bdd2588bfd3bd68117fd529ececafb0544bdc"
 dependencies = [
  "critical-section",
  "linked_list_allocator",
@@ -718,7 +718,7 @@ dependencies = [
 [[package]]
 name = "include_gif"
 version = "1.2.0"
-source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de#3785307287c63035ee6b381d56a1f787d83237de"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=77f872272720f74d0ce850dcf104872b8b1c26f9#77f872272720f74d0ce850dcf104872b8b1c26f9"
 dependencies = [
  "flate2",
  "image",
@@ -815,10 +815,10 @@ dependencies = [
 [[package]]
 name = "ledger_device_sdk"
 version = "1.15.0"
-source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de#3785307287c63035ee6b381d56a1f787d83237de"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=77f872272720f74d0ce850dcf104872b8b1c26f9#77f872272720f74d0ce850dcf104872b8b1c26f9"
 dependencies = [
  "const-zero",
- "include_gif 1.2.0 (git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de)",
+ "include_gif 1.2.0 (git+https://github.com/Zondax/ledger-device-rust-sdk?rev=77f872272720f74d0ce850dcf104872b8b1c26f9)",
  "ledger_secure_sdk_sys",
  "num-traits",
  "numtoa",
@@ -829,7 +829,7 @@ dependencies = [
 [[package]]
 name = "ledger_secure_sdk_sys"
 version = "1.4.4"
-source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=3785307287c63035ee6b381d56a1f787d83237de#3785307287c63035ee6b381d56a1f787d83237de"
+source = "git+https://github.com/Zondax/ledger-device-rust-sdk?rev=77f872272720f74d0ce850dcf104872b8b1c26f9#77f872272720f74d0ce850dcf104872b8b1c26f9"
 dependencies = [
  "bindgen",
  "cc",

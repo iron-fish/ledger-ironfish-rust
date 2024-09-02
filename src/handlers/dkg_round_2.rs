@@ -24,8 +24,9 @@ use ironfish_frost::dkg::round2::CombinedPublicPackage;
 use ironfish_frost::error::IronfishFrostError;
 use ironfish_frost::participant::{Secret};
 use ledger_device_sdk::io::{Comm, Event};
+use crate::buffer::{Buffer, BUFFER_SIZE};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
-use crate::contex::TxContext;
+use crate::context::TxContext;
 use crate::utils::zlog;
 
 const MAX_TRANSACTION_LEN: usize = 4080;
@@ -57,12 +58,14 @@ pub fn handler_dkg_round_2(
 
     // Next chunks, append data to raw_tx and return or parse
     // the transaction if it is the last chunk.
-    if ctx.raw_tx.len() + data.len() > MAX_TRANSACTION_LEN {
+    if ctx.buffer_pos + data.len() > BUFFER_SIZE {
         return Err(AppSW::TxWrongLength);
     }
 
     // Append data to raw_tx
-    ctx.raw_tx.extend(data);
+    Buffer.set_slice(ctx.buffer_pos, data);
+    ctx.buffer_pos += data.len();
+
 
     // If we expect more chunks, return
     if chunk == 1 {
@@ -72,7 +75,7 @@ pub fn handler_dkg_round_2(
     }
 
     // Try to deserialize the transaction
-    let tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
+    let tx: Tx = parse_tx(ctx.buffer_pos).map_err(|_| AppSW::TxParsingFail)?;
     // Reset transaction context as we want to release space on the heap
     ctx.reset();
 
@@ -88,33 +91,33 @@ pub fn handler_dkg_round_2(
     send_apdu_chunks(comm, &response)
 }
 
-fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
+fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
     let mut tx_pos:usize = 0;
 
-    let identity_index = raw_tx[tx_pos];
+    let identity_index = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
-    let elements = raw_tx[tx_pos];
+    let elements = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
-    let len = (((raw_tx[tx_pos] as u16) << 8) | (raw_tx[tx_pos+1] as u16)) as usize;
+    let len = (((Buffer.get_element(tx_pos) as u16) << 8) | (Buffer.get_element(tx_pos+1) as u16)) as usize;
     tx_pos +=2;
 
     let mut round_1_public_packages : Vec<PublicPackage> = Vec::new();
     for _i in 0..elements {
-        let public_package = PublicPackage::deserialize_from(&raw_tx[tx_pos..tx_pos+len]).unwrap();
+        let public_package = PublicPackage::deserialize_from(Buffer.get_slice(tx_pos,tx_pos+len)).unwrap();
         tx_pos += len;
 
         round_1_public_packages.push(public_package);
     }
 
-    let len = (((raw_tx[tx_pos] as u16) << 8) | (raw_tx[tx_pos+1] as u16)) as usize;
+    let len = (((Buffer.get_element(tx_pos) as u16) << 8) | (Buffer.get_element(tx_pos+1) as u16)) as usize;
     tx_pos +=2;
 
-    let round_1_secret_package = raw_tx[tx_pos..tx_pos+len].to_vec();
+    let round_1_secret_package = Buffer.get_slice(tx_pos,tx_pos+len).to_vec();
     tx_pos += len;
 
-    if tx_pos != raw_tx.len() {
+    if tx_pos != max_buffer_pos {
         return Err("invalid payload");
     }
 

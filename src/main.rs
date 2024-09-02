@@ -30,8 +30,8 @@ mod handlers {
     pub mod dkg_round_3;
 }
 
-mod settings;
-mod contex;
+mod context;
+mod buffer;
 
 use app_ui::menu::ui_menu_main;
 use handlers::{
@@ -53,7 +53,7 @@ extern crate alloc;
 
 #[cfg(any(target_os = "stax", target_os = "flex"))]
 use ledger_device_sdk::nbgl::{init_comm, NbglReviewStatus, StatusType};
-use crate::contex::TxContext;
+use crate::context::TxContext;
 
 // P2 for last APDU to receive.
 const P2_SIGN_TX_LAST: u8 = 0x00;
@@ -139,26 +139,6 @@ impl TryFrom<ApduHeader> for Instruction {
             (3..=6, _, _) => Err(AppSW::WrongP1P2),
             (_, _, _) => Err(AppSW::InsNotSupported),
         }
-    }
-}
-
-#[cfg(any(target_os = "stax", target_os = "flex"))]
-fn show_status_if_needed(ins: &Instruction, tx_ctx: &TxContext, status: &AppSW) {
-    let (show_status, status_type) = match (ins, status) {
-        (Instruction::GetPubkey { display: true }, AppSW::Deny | AppSW::Ok) => {
-            (true, StatusType::Address)
-        }
-        (Instruction::SignTx { .. }, AppSW::Deny | AppSW::Ok) if tx_ctx.finished() => {
-            (true, StatusType::Transaction)
-        }
-        (_, _) => (false, StatusType::Transaction),
-    };
-
-    if show_status {
-        let success = *status == AppSW::Ok;
-        NbglReviewStatus::new()
-            .status_type(status_type)
-            .show(success);
     }
 }
 

@@ -5,7 +5,7 @@ authors = ["yhql", "agrojean-ledger"]
 edition = "2021"
 
 [dependencies]
-ledger_device_sdk = { git="https://github.com/Zondax/ledger-device-rust-sdk", rev = "3785307287c63035ee6b381d56a1f787d83237de" }
+ledger_device_sdk = { git="https://github.com/Zondax/ledger-device-rust-sdk", rev = "77f872272720f74d0ce850dcf104872b8b1c26f9" }
 # ledger_device_sdk = { version="1.14.0" }
 include_gif = "1.2.0"
 serde = {version="1.0.192", default_features = false, features = ["derive"]}

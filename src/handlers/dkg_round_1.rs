@@ -21,8 +21,9 @@ use ledger_device_sdk::random::LedgerRng;
 use ironfish_frost::dkg;
 use ironfish_frost::participant::{Identity, Secret};
 use ledger_device_sdk::io::{Comm, Event};
+use crate::buffer::{Buffer, BUFFER_SIZE};
 use crate::handlers::dkg_get_identity::compute_dkg_secret;
-use crate::contex::TxContext;
+use crate::context::TxContext;
 use crate::utils::zlog;
 
 const MAX_TRANSACTION_LEN: usize = 2040;
@@ -40,8 +41,7 @@ pub fn handler_dkg_round_1(
     ctx: &mut TxContext,
 ) -> Result<(), AppSW> {
     // Try to get data from comm
-    let data_vec = comm.get_data().map_err(|_| AppSW::WrongApduLength)?.to_vec();
-    let data = data_vec.as_slice();
+    let data = comm.get_data().map_err(|_| AppSW::WrongApduLength)?;
 
     // First chunk, try to parse the path
     if chunk == 0 {
@@ -53,12 +53,13 @@ pub fn handler_dkg_round_1(
     // Next chunks, append data to raw_tx and return or parse
     // the transaction if it is the last chunk.
     } else {
-        if ctx.raw_tx.len() + data.len() > MAX_TRANSACTION_LEN {
+        if ctx.buffer_pos + data.len() > BUFFER_SIZE {
             return Err(AppSW::TxWrongLength);
         }
 
         // Append data to raw_tx
-        ctx.raw_tx.extend(data);
+        Buffer.set_slice(ctx.buffer_pos, data);
+        ctx.buffer_pos += data.len();
 
         // If we expect more chunks, return
         if chunk == 1 {
@@ -69,34 +70,34 @@ pub fn handler_dkg_round_1(
             //comm.append(data);
             //Ok(())
             // Try to deserialize the transaction
-            let mut tx: Tx = parse_tx(&ctx.raw_tx).map_err(|_| AppSW::TxParsingFail)?;
+            let mut tx: Tx = parse_tx(ctx.buffer_pos).map_err(|_| AppSW::TxParsingFail)?;
             let dkg_secret = compute_dkg_secret(tx.identity_index);
             compute_dkg_round_1(comm, &dkg_secret, &mut tx)
         }
     }
 }
 
-fn parse_tx(raw_tx: &Vec<u8>) -> Result<Tx, &str>{
+fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
     let mut tx_pos:usize = 0;
 
-    let identity_index = raw_tx[tx_pos];
+    let identity_index = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
-    let elements = raw_tx[tx_pos];
+    let elements = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
     let mut identities:Vec<Identity> = Vec::new();
     for _i in 0..elements {
-        let identity = Identity::deserialize_from(&raw_tx[tx_pos..tx_pos+129]).unwrap();
+        let identity = Identity::deserialize_from(Buffer.get_slice(tx_pos,tx_pos+129)).unwrap();
         tx_pos += 129;
 
         identities.push(identity);
     }
 
-    let min_signers = raw_tx[tx_pos];
+    let min_signers = Buffer.get_element(tx_pos);;
     tx_pos += 1;
 
-    if tx_pos != raw_tx.len() {
+    if tx_pos != max_buffer_pos {
         return Err("invalid payload");
     }
 

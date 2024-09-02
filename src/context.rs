@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use crate::utils::Bip32Path;
 
 pub struct TxContext {
-    pub raw_tx: Vec<u8>,
+    pub buffer_pos: usize,
     pub path: Bip32Path,
     pub review_finished: bool,
 }
@@ -12,7 +12,7 @@ impl TxContext {
     // Constructor
     pub fn new() -> TxContext {
         TxContext {
-            raw_tx: Vec::new(),
+            buffer_pos: 0,
             path: Default::default(),
             review_finished: false,
         }
@@ -24,11 +24,7 @@ impl TxContext {
     }
     // Implement reset for TxInfo
     pub fn reset(&mut self) {
-        // Clean all values on the vec
-        self.raw_tx.clear();
-        // Recover the space from the heap (clear does not release the space from the heap)
-        self.raw_tx.shrink_to_fit();
-
+        self.buffer_pos = 0;
         self.path = Default::default();
         self.review_finished = false;
     }
