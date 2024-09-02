@@ -94,14 +94,8 @@ pub fn handler_dkg_round_3(
     send_apdu_chunks(comm, &response)
 }
 
-fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
-    zlog_stack("start parse_tx round3\0");
-
-    let mut tx_pos:usize = 0;
-
-    let identity_index = Buffer.get_element(tx_pos);
-    tx_pos +=1;
-
+#[inline(never)]
+fn parse_round_1_public_packages(mut tx_pos: usize) -> (Vec<PublicPackage>, usize){
     let elements = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
@@ -116,6 +110,11 @@ fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
         round_1_public_packages.push(public_package);
     }
 
+    (round_1_public_packages, tx_pos)
+}
+
+#[inline(never)]
+fn parse_round_2_public_packages(mut tx_pos: usize)-> (Vec<CombinedPublicPackage>, usize){
     let elements = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
@@ -130,6 +129,21 @@ fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
         round_2_public_packages.push(c_public_package);
     }
 
+    (round_2_public_packages, tx_pos)
+}
+
+#[inline(never)]
+fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
+    zlog_stack("start parse_tx round3\0");
+
+    let mut tx_pos:usize = 0;
+
+    let identity_index = Buffer.get_element(tx_pos);
+    tx_pos +=1;
+
+    let (round_1_public_packages, tx_pos) = parse_round_1_public_packages(tx_pos);
+    let (round_2_public_packages, mut tx_pos) = parse_round_2_public_packages(tx_pos);
+
     let len = (((Buffer.get_element(tx_pos) as u16) << 8) | (Buffer.get_element(tx_pos+1) as u16)) as usize;
     tx_pos +=2;
 
@@ -142,7 +156,12 @@ fn parse_tx(max_buffer_pos: usize) -> Result<Tx, &'static str>{
 
     zlog_stack("done parse_tx round3\0");
 
-    Ok(Tx{round_2_secret_package, round_1_public_packages, round_2_public_packages, identity_index})
+    Ok(Tx{
+        round_2_secret_package: round_2_secret_package,
+        round_1_public_packages: round_1_public_packages,
+        round_2_public_packages: round_2_public_packages,
+        identity_index
+    })
 }
 
 fn compute_dkg_round_3(secret: &Secret, tx: &Tx) -> Result<(KeyPackage, PublicKeyPackage, GroupSecretKey), IronfishFrostError> {
