@@ -85,6 +85,7 @@ fn parse_round_1_public_packages(mut tx_pos: usize) -> (Vec<PublicPackage>, usiz
         let public_package = PublicPackage::deserialize_from(Buffer.get_slice(tx_pos,tx_pos+len)).unwrap();
         tx_pos += len;
 
+        zlog_stack("push parse_round_1 - e\0");
         round_1_public_packages.push(public_package);
         zlog_stack("done parse_round_1 - e\0");
     }
@@ -108,6 +109,7 @@ fn parse_round_2_public_packages(mut tx_pos: usize)-> (Vec<CombinedPublicPackage
         let c_public_package = CombinedPublicPackage::deserialize_from(Buffer.get_slice(tx_pos,tx_pos+len)).unwrap();
         tx_pos += len;
 
+        zlog_stack("push parse_round_2 - e\0");
         round_2_public_packages.push(c_public_package);
         zlog_stack("done parse_round_2 - e\0");
     }
