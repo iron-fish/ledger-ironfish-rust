@@ -737,7 +737,7 @@ dependencies = [
 [[package]]
 name = "ironfish-frost"
 version = "0.1.0"
-source = "git+https://github.com/Zondax/ironfish-frost.git?rev=d26437c62a7a10f6d2e1b7a5123f0686fab5aba8#d26437c62a7a10f6d2e1b7a5123f0686fab5aba8"
+source = "git+https://github.com/Zondax/ironfish-frost.git?rev=eaa86f52d73cb6c2f2cb21f5c1d197549b6ac318#eaa86f52d73cb6c2f2cb21f5c1d197549b6ac318"
 dependencies = [
  "chacha20",
  "chacha20poly1305",
