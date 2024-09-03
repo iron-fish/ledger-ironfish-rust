@@ -72,38 +72,47 @@ pub fn handler_dkg_round_3(
 
 #[inline(never)]
 fn parse_round_1_public_packages(mut tx_pos: usize) -> (Vec<PublicPackage>, usize){
+    zlog_stack("start parse_round_1_public_packages\0");
     let elements = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
     let len = (((Buffer.get_element(tx_pos) as u16) << 8) | (Buffer.get_element(tx_pos+1) as u16)) as usize;
     tx_pos +=2;
 
-    let mut round_1_public_packages : Vec<PublicPackage> = Vec::new();
+    let mut round_1_public_packages : Vec<PublicPackage> = Vec::with_capacity(elements as usize);
     for _i in 0..elements {
+        zlog_stack("start parse_round_1 - e\0");
         let public_package = PublicPackage::deserialize_from(Buffer.get_slice(tx_pos,tx_pos+len)).unwrap();
         tx_pos += len;
 
         round_1_public_packages.push(public_package);
+        zlog_stack("done parse_round_1 - e\0");
     }
 
+    zlog_stack("done parse_round_1_public_packages\0");
     (round_1_public_packages, tx_pos)
 }
 
 #[inline(never)]
 fn parse_round_2_public_packages(mut tx_pos: usize)-> (Vec<CombinedPublicPackage>, usize){
+    zlog_stack("start parse_round_2_public_packages\0");
     let elements = Buffer.get_element(tx_pos);
     tx_pos +=1;
 
     let len = (((Buffer.get_element(tx_pos) as u16) << 8) | (Buffer.get_element(tx_pos+1) as u16)) as usize;
     tx_pos +=2;
 
-    let mut round_2_public_packages : Vec<CombinedPublicPackage> = Vec::new();
+    let mut round_2_public_packages : Vec<CombinedPublicPackage> = Vec::with_capacity(elements as usize);
     for _i in 0..elements {
+        zlog_stack("start parse_round_2 - e\0");
         let c_public_package = CombinedPublicPackage::deserialize_from(Buffer.get_slice(tx_pos,tx_pos+len)).unwrap();
         tx_pos += len;
 
         round_2_public_packages.push(c_public_package);
+        zlog_stack("done parse_round_2 - e\0");
     }
+
+    zlog_stack("done parse_round_1_public_packages\0");
 
     (round_2_public_packages, tx_pos)
 }
