@@ -13,7 +13,9 @@ serde-json-core = { git = "https://github.com/rust-embedded-community/serde-json
 hex = { version = "0.4.3", default-features = false, features = ["serde", "alloc"] }
 numtoa = "0.2.4"
 
-ironfish-frost = { git = "https://github.com/Zondax/ironfish-frost.git", rev = "eaa86f52d73cb6c2f2cb21f5c1d197549b6ac318", default-features = false, features = ["dkg"]}
+# ironfish-frost = { git = "https://github.com/Zondax/ironfish-frost.git", rev = "eaa86f52d73cb6c2f2cb21f5c1d197549b6ac318", default-features = false, features = ["dkg"]}
+# ironfish-frost = { git = "https://github.com/iron-fish/ironfish-frost.git", rev = "f18f3894c77bf1dd063b0486d8f3dcc0399091ba", default-features = false, features = ["dkg"] }
+ironfish-frost = { git = "https://github.com/iron-fish/ironfish-frost.git", branch = "feat/hughy/round3-min", default-features = false, features = ["dkg"] }
 getrandom = { version = "0.2", features = ["custom"] }
 
 [profile.release]

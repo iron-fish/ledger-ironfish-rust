@@ -149,8 +149,8 @@ describe.each(models)('DKG', function (m) {
                             i,
                             round1s.map(r => r.publicPackage),
                             round2s.filter((_, pos) => i != pos).map(r => r.publicPackage),
-                            round2s[i].secretPackage
-                        );
+                            round2s[i].secretPackage,
+                        )
 
                         expect(i + " " + round3.returnCode.toString(16)).toEqual(i + " " + "9000")
                         expect(round3.errorMessage).toEqual('No errors')
@@ -172,6 +172,134 @@ describe.each(models)('DKG', function (m) {
             }
         })
     })
+
+    // describe.skip.each([{p:2, min:2}])('participants', function ({p: participants, min: minSigners}){
+    //     it("p: " + participants + " - min: " + minSigners, async function(){
+    //         const checkSimRequired = (sims: Zemu[], i:number): {sim: Zemu, created:boolean} => {
+    //             let created = false;
+    //             let sim: Zemu | undefined;
+
+    //             if(!sims.length){
+    //                 sim = new Zemu(m.path)
+    //                 created = true;
+    //             } else if (sims.length === 1){
+    //                 sim = sims[0];
+    //             } else {
+    //                 sim = sims[i];
+    //             }
+
+    //             if(!sim) throw new Error("sim should have a value here")
+    //             return {sim, created}
+    //         }
+
+    //         const runMethod = async (rcvSims: Zemu[], i: number, fn: (app: IronfishApp)=> Promise<any>): Promise<any> => {
+    //             const {sim, created} = checkSimRequired(rcvSims, i)
+
+    //             try {
+    //                 if(created) await sim.start({...defaultOptions, model: m.name})
+    //                 const app = new IronfishApp(sim.getTransport())
+    //                 return await fn(app)
+    //             } finally {
+    //                 if(created) await sim.close()
+    //             }
+    //         }
+
+    //         const globalSims: Zemu[] = [];
+
+    //         if(ONE_GLOBAL_APP) globalSims.push(new Zemu(m.path))
+    //         else if (ONE_APP_PER_PARTICIPANT) for (let i = 0; i < participants; i++) globalSims.push(new Zemu(m.path))
+
+    //         for (let i = 0; i < globalSims.length; i++)
+    //             await globalSims[i].start({...defaultOptions, model: m.name})
+
+    //         let identities: any[] = [];
+    //         let round1s: any[] = [];
+    //         let round2s: any[] = [];
+
+    //         try {
+    //             for(let i = 0; i < participants; i++){
+    //                 const identity = await runMethod(globalSims, i, async (app: IronfishApp) => {
+    //                     const identity = await app.dkgGetIdentity(i)
+
+    //                     expect(i + " " + identity.returnCode.toString(16)).toEqual(i + " " + "9000")
+    //                     expect(identity.errorMessage).toEqual('No errors')
+
+    //                     return identity
+    //                 });
+
+    //                 if (!identity.identity) throw new Error("no identity found")
+
+    //                 identities.push(identity.identity.toString('hex'))
+    //             }
+
+    //             for(let i = 0; i < participants; i++){
+    //                 const round1 = await runMethod(globalSims, i, async (app: IronfishApp) => {
+    //                     const round1 = await app.dkgRound1(PATH, i, identities, minSigners);
+
+    //                     expect(i + " " + round1.returnCode.toString(16)).toEqual(i + " " + "9000")
+    //                     expect(round1.errorMessage).toEqual('No errors')
+
+    //                     return round1
+    //                 });
+
+    //                 if(!round1.publicPackage || !round1.secretPackage)
+    //                     throw new Error("no round 1 found")
+
+    //                 round1s.push({
+    //                     publicPackage: round1.publicPackage.toString('hex'),
+    //                     secretPackage: round1.secretPackage.toString('hex')
+    //                 })
+    //             }
+
+    //             for(let i = 0; i < participants; i++){
+    //                 const round2 = await runMethod(globalSims, i, async (app: IronfishApp) => {
+    //                     const round2 = await app.dkgRound2(PATH, i, round1s.map(r => r.publicPackage), round1s[i].secretPackage);
+
+    //                     expect(i + " " + round2.returnCode.toString(16)).toEqual(i + " " + "9000")
+    //                     expect(round2.errorMessage).toEqual('No errors')
+
+    //                     return round2
+    //                 });
+
+    //                 if(!round2.publicPackage || !round2.secretPackage)
+    //                     throw new Error("no round 1 found")
+
+    //                 round2s.push({
+    //                     publicPackage: round2.publicPackage.toString('hex'),
+    //                     secretPackage: round2.secretPackage.toString('hex')
+    //                 })
+    //             }
+
+    //             for(let i = 0; i < participants; i++){
+    //                 const round3 = await runMethod(globalSims, i, async (app: IronfishApp) => {
+    //                     let round3 = await app.dkgRound3(
+    //                         PATH,
+    //                         i,
+    //                         round1s.map(r => r.publicPackage),
+    //                         round2s.filter((_, pos) => i != pos).map(r => r.publicPackage),
+    //                         round2s[i].secretPackage
+    //                     );
+
+    //                     expect(i + " " + round3.returnCode.toString(16)).toEqual(i + " " + "9000")
+    //                     expect(round3.errorMessage).toEqual('No errors')
+
+    //                     return round3
+    //                 });
+
+    //                 /*if(!round2.publicPackage || !round2.secretPackage)
+    //                     throw new Error("no round 1 found")
+
+    //                 round2s.push({
+    //                     publicPackage: round2.publicPackage.toString('hex'),
+    //                     secretPackage: round2.secretPackage.toString('hex')
+    //                 })*/
+    //             }
+    //         } finally {
+    //             for (let i = 0; i < globalSims.length; i++)
+    //                 await globalSims[i].close()
+    //         }
+    //     })
+    // })
 
     describe.skip.each(identities)('identities', function ({i, v}) {
         test(i + "", async function(){

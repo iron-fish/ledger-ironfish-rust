@@ -737,7 +737,7 @@ dependencies = [
 [[package]]
 name = "ironfish-frost"
 version = "0.1.0"
-source = "git+https://github.com/Zondax/ironfish-frost.git?rev=eaa86f52d73cb6c2f2cb21f5c1d197549b6ac318#eaa86f52d73cb6c2f2cb21f5c1d197549b6ac318"
+source = "git+https://github.com/iron-fish/ironfish-frost.git?branch=feat/hughy/round3-min#80c32bedad1f553d9a645170d400aedb4a9e1591"
 dependencies = [
  "chacha20",
  "chacha20poly1305",
